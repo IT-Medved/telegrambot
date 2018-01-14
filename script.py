@@ -1,42 +1,29 @@
-import asyncio
-import aiohttp
-from aiohttp import web
-import json
+import telebot
 import os
-TOKEN = os.environ['api_token']
-API_URL = 'https://api.telegram.org/bot%s/sendMessage' % TOKEN
+from flask import Flask, request
+api_token = os.environ['api_token']
+bot = telebot.TeleBot(api_token)
 
-async def handler(request):
-    data = await request.json()
-    headers = {
-        'Content-Type': 'application/json'
-    }
-    message = {
-        'chat_id': data['message']['chat']['id'],
-        'text': data['message']['text']
-    }
-    async with aiohttp.ClientSession(loop=loop) as session:
-        async with session.post(API_URL,
-                                data=json.dumps(message),
-                                headers=headers) as resp:
-            try:
-                assert resp.status == 200
-            except:
-                return web.Response(status=500)
-    return web.Response(status=200)
+server = Flask(__name__)
 
-async def init_app(loop):
-    app = web.Application(loop=loop, middlewares=[])
-    app.router.add_post('/api/v1', handler)
-    return app
+@bot.message_handler(commands=['start'])
+def start(message):
+    bot.reply_to(message, 'Hello, ' + message.from_user.first_name)
 
-if __name__ == '__main__':
-    loop = asyncio.get_event_loop()
-    try:
-        app = loop.run_until_complete(init_app(loop))
-        web.run_app(app, host='0.0.0.0', port=23456)
-    except Exception as e:
-        print('Error create server: %r' % e)
-    finally:
-        pass
-    loop.close()
+@bot.message_handler(func=lambda message: True, content_types=['text'])
+def echo_message(message):
+    bot.reply_to(message, message.text)
+
+@server.route("/bot", methods=['POST'])
+def getMessage():
+    bot.process_new_updates([telebot.types.Update.de_json(request.stream.read().decode("utf-8"))])
+    return "!", 200
+
+@server.route("/")
+def webhook():
+    bot.remove_webhook()
+    bot.set_webhook(url="https://testplafrorm.herokuapp.com/bot")
+    return "!", 200
+
+server.run(host="0.0.0.0", port=os.environ.get('PORT', 5000))
+server = Flask(__name__)
