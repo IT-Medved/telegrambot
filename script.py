@@ -30,7 +30,7 @@ def webhook():
     bot.set_webhook(url="https://testplafrorm.herokuapp.com/bot" + api_token)
     return "!", 200
 
-server.run(host="0.0.0.0", port=int(os.environ.get('PORT', 5000)))
 webhook()
+server.run(host="0.0.0.0", port=int(os.environ.get('PORT', 5000)))
 
 server = Flask(__name__)
