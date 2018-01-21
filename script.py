@@ -1,9 +1,7 @@
 import telebot
 import os
 from flask import Flask, request
-import logging
 
-logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
 api_token = os.environ['api_token']
 bot = telebot.TeleBot(api_token)
 
@@ -15,13 +13,11 @@ def start(message):
 
 @bot.message_handler(func=lambda message: True, content_types=['text'])
 def echo_message(message):
-    logging.debug("echo_message")
     bot.reply_to(message, message.text)
 
 @server.route("/bot" + api_token, methods=['POST'])
 def getMessage():
     bot.process_new_updates([telebot.types.Update.de_json(request.stream.read().decode("utf-8"))])
-    logging.debug("getMessage")
     return "!", 200
 
 @server.route("/")
@@ -32,4 +28,3 @@ def webhook():
 
 webhook()
 server.run(host="0.0.0.0", port=int(os.environ.get('PORT', 5000)))
-server = Flask(__name__)
